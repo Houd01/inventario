@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Producto por Caja</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <nav class="nav flex-column">
+            <h2 class="nav-link">Gestión de Productos</h2>
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#productosSubmenu">Productos</a>
+            <div class="collapse" id="productosSubmenu">
+                <a class="nav-link" href="categorias.php">Categorías</a>
+                <a class="nav-link" href="agregar_individual.html">Productos Individuales</a>
+                <a class="nav-link" href="agregar_caja.html">Productos por Caja</a>
+            </div>
+            <h2 class="nav-link">Gestión de Inventario</h2>
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#inventarioSubmenu">Inventario</a>
+            <div class="collapse" id="inventarioSubmenu">
+                <a class="nav-link" href="inventario_individual.php">Inventario Individual</a>
+                <a class="nav-link" href="inventario_cajas.php">Inventario por Cajas</a>
+            </div>
+        </nav>
+    </div>
+    <div class="content">
+        <h2>Agregar Producto por Caja</h2>
+        <form id="form-caja" action="add_caja.php" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="codigo-caja">Código:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="codigo-caja" name="codigo">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-secondary" onclick="generarCodigo()">Generar Código</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre-caja">Nombre:</label>
+                        <input type="text" class="form-control" id="nombre-caja" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion-caja">Descripción:</label>
+                        <input type="text" class="form-control" id="descripcion-caja" name="descripcion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="precio-unidad-caja">Precio por Unidad:</label>
+                        <input type="number" class="form-control" id="precio-unidad-caja" name="precio_unidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria-caja">Categoría:</label>
+                        <select class="form-control" id="categoria-caja" name="categoria_id" required>
+                            <option value="">Seleccione una categoría</option>
+                            <?php
+                            include 'db.php';
+                            $result = $conn->query("SELECT * FROM categorias");
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<option value='" . $row['id'] . "'>" . htmlspecialchars($row['nombre_categoria']) . "</option>";
+                                }
+                            }
+                            $conn->close();
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="stock-tienda-caja">Stock en Tienda:</label>
+                        <input type="number" class="form-control" id="stock-tienda-caja" name="stock_tienda" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock-almacen-caja">Stock en Almacén:</label>
+                        <input type="number" class="form-control" id="stock-almacen-caja" name="stock_almacen" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="total-unidades">Total Unidades:</label>
+                        <input type="number" class="form-control" id="total-unidades" name="total_unidades" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="total-cajas">Total Cajas:</label>
+                        <input type="number" class="form-control" id="total-cajas" name="total_cajas" readonly>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Producto</button>
+        </form>
+        <hr>
+        <h2>Importar Productos desde Excel</h2>
+        <form action="add_caja.php" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="import-file">Archivo Excel:</label>
+                <div class="input-group">
+                    <input type="file" class="form-control-file" id="import-file" name="import_file" accept=".xlsx, .xls" required>
+                    <div class="input-group-append">
+                        <a class="btn btn-secondary" href="descargar_plantilla.php">Descargar Plantilla</a>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Importar Productos</button>
+        </form>
+    </div>
+    <audio id="success-sound" src="success.mp3" preload="auto"></audio> <!-- Archivo de sonido -->
+    <audio id="error-sound" src="error.mp3" preload="auto"></audio> <!-- Archivo de sonido -->
+    <script>
+        function generarCodigo() {
+            var codigo = Math.random().toString(36).substr(2, 4).toUpperCase();
+            document.getElementById('codigo-caja').value = codigo;
+        }
+
+        function calcularTotalCajas() {
+            var stockTienda = parseInt(document.getElementById('stock-tienda-caja').value) || 0;
+            var stockAlmacen = parseInt(document.getElementById('stock-almacen-caja').value) || 0;
+            document.getElementById('total-cajas').value = stockTienda + stockAlmacen;
+        }
+
+        document.getElementById('stock-tienda-caja').addEventListener('input', calcularTotalCajas);
+        document.getElementById('stock-almacen-caja').addEventListener('input', calcularTotalCajas);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            if (status === 'success') {
+                document.getElementById('success-sound').play();
+            } else if (status === 'error') {
+                document.getElementById('error-sound').play();
+            }
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
